@@ -1,0 +1,162 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+
+namespace CSharpExercises.Exercises.Regular_expressions
+{
+    class Ship
+    {
+        public Ship(string name, List<int> sectorsHealth)
+        {
+            this.Name = name;
+            this.SectorsHealth = sectorsHealth;
+        }
+        public string Name { get; set; }
+        List<int> SectorsHealth { get; set; }
+    }
+    class Program
+    {
+        public static void Main()
+        {
+            List<int> pirateShip = Console.ReadLine()
+                                    .Split('>', StringSplitOptions
+                                    .RemoveEmptyEntries).Select(int.Parse).ToList();
+            List<int> battleShip = Console.ReadLine()
+                                    .Split('>', StringSplitOptions
+                                    .RemoveEmptyEntries).Select(int.Parse).ToList();
+
+            int healthCapacity = int.Parse(Console.ReadLine());
+
+            Dictionary<string, List<int>> healthDictionary = new Dictionary<string, List<int>>();
+            string pirateShipName = "Pirate ship";
+            string battleShipName = "Warship";
+
+            healthDictionary.Add(pirateShipName, pirateShip);
+            healthDictionary.Add(battleShipName, pirateShip);
+
+            string command;
+
+            while ((command = Console.ReadLine()) != "Retire")
+            {
+                List<string> inputs = command.Split(" ", StringSplitOptions.RemoveEmptyEntries).ToList();
+
+                string action = inputs[0];
+
+                if (action == "Fire")
+                {
+                    int index = int.Parse(inputs[1]);
+                    int damage = int.Parse(inputs[2]);
+
+                    if (index < 0 || index >= healthDictionary[battleShipName].Count)
+                    {
+                        continue;
+                    }
+                    int healthStatus = battleShip[index] - damage;
+
+                    if (healthStatus <= 0)
+                    {
+                        Console.WriteLine("You won! The enemy ship has sunken.");
+                        return;
+                    }
+                    battleShip.Insert(index, healthStatus);
+
+                    battleShip.RemoveAt(index + 1);
+                    healthDictionary[battleShipName] = battleShip;
+
+                }
+                else if (action == "Defend")
+                {
+                    if (inputs.Count == 3)
+                    {
+                        int startIndex = int.Parse(inputs[1]);
+                        int damage = int.Parse(inputs[2]);
+
+                        if (startIndex < 0 || startIndex >= healthDictionary[pirateShipName].Count)
+                        {
+                            continue;
+                        }
+                        int healthStatus = pirateShip[startIndex] - damage;
+
+                        if (healthStatus <= 0)
+                        {
+                            Console.WriteLine("You lost! The pirate ship has sunken.");
+                            return;
+                        }
+                        pirateShip.Insert(startIndex, healthStatus);
+
+                        pirateShip.RemoveAt(startIndex + 1);
+                        healthDictionary[pirateShipName] = pirateShip;
+                    }
+                    else if (inputs.Count == 4)
+                    {
+                        int startIndex = int.Parse(inputs[1]);
+                        int endIndex = int.Parse(inputs[2]);
+                        int damage = int.Parse(inputs[3]);
+
+                        if (startIndex < 0 || startIndex >= healthDictionary[pirateShipName].Count)
+                        {
+                            continue;
+                        }
+                        if (endIndex < 0 || endIndex >= healthDictionary[pirateShipName].Count)
+                        {
+                            continue;
+                        }
+                        int healthStatus = pirateShip[startIndex] - damage;
+
+                        for (int i = startIndex; i <= endIndex; i++)
+                        {
+                            pirateShip[i] -= damage;
+                            if (pirateShip[i] <= 0)
+                            {
+                                Console.WriteLine("You lost! The pirate ship has sunken.");
+                                return;
+                            }
+
+                            healthDictionary[pirateShipName] = pirateShip;
+                        }
+                    }
+
+
+                }
+                else if (action == "Repair")
+                {
+                    int index = int.Parse(inputs[1]);
+                    int health = int.Parse(inputs[2]);
+
+                    if (index < 0 || index >= pirateShip.Count)
+                    {
+                        continue;
+                    }
+                    pirateShip[index] += health;
+                    if (pirateShip[index] > healthCapacity)
+                    {
+                        pirateShip[index] = healthCapacity;
+                    }
+                    healthDictionary[pirateShipName] = pirateShip;
+                }
+                else if (action == "Status")
+                {
+                    int sectionToRepair = healthCapacity * 2 / 10;
+                    int repairCounter = 0;
+
+                    foreach (int sector in pirateShip)
+                    {
+                        if (sector < sectionToRepair)
+                        {
+                            repairCounter++;
+                        }
+                    }
+                    Console.WriteLine($"{repairCounter} sections need repair.");
+                }
+
+            }
+
+            foreach (var ship in healthDictionary)
+            {
+                Console.WriteLine($"{ship.Key} status: {ship.Value.Sum()}");
+            }
+        }
+    }
+}
